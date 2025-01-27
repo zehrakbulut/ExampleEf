@@ -12,8 +12,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationContext>();
-
 // Add DbContext to DI container
 builder.Services.AddDbContext<ApplicationContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -34,6 +32,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Veritabanýný günceller
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+    context.Database.Migrate(); // Migrationlarý uygula
+}
+
 //Veri Ekleme Ýþlemi için
 await SeedDatabaseAsync(app);
 
@@ -44,62 +49,49 @@ static async Task SeedDatabaseAsync(WebApplication app)
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
 
-    // Mevcut verilerin maksimum ID deðerlerini bul
-    var maxUrunId = context.Urunler.Any() ? context.Urunler.Max(u => u.Id) : 0;
-    var maxSiparisId = context.Siparisler.Any() ? context.Siparisler.Max(s => s.Id) : 0;
+    // Kategoriler ekle
+    if (!context.Kategoriler.Any())
+    {
+        for (int i = 1; i <= 10; i++)
+        {
+            context.Kategoriler.Add(new Kategori { Adi = $"Kategori {i}" });
+        }
+        await context.SaveChangesAsync();
+    }
 
     // Ürünler ekle
-    if (context.Urunler.Count() < 3000000)
+    if (!context.Urunler.Any())
     {
         var random = new Random();
-        var yeniUrunSayisi = 3000000 - context.Urunler.Count();
-
-        for (int i = 1; i <= yeniUrunSayisi; i++)
+        for (int i = 1; i <= 1500; i++)
         {
             context.Urunler.Add(new Urun
             {
-                Adi = $"Ürün {maxUrunId + i}",
+                Adi = $"Ürün {i}",
                 Fiyat = random.Next(10, 5000),
                 Stok = random.Next(1, 100),
-                KategoriId = random.Next(1, 11) // 1 ile 10 arasýnda kategori
+                KategoriId = random.Next(1, 11) // 1 ile 10 arasýnda bir kategori seçiliyor
             });
-
-            // Performansý artýrmak için toplu ekleme
-            if (i % 10000 == 0) // Her 10 bin üründe bir veritabanýna kaydet
-            {
-                await context.SaveChangesAsync();
-                Console.WriteLine($"{i} ürün eklendi.");
-            }
         }
         await context.SaveChangesAsync();
-        Console.WriteLine("Ürünler baþarýyla eklendi!");
     }
 
     // Sipariþler ekle
-    if (context.Siparisler.Count() < 20000)
+    if (!context.Siparisler.Any())
     {
-        var yeniSiparisSayisi = 20000 - context.Siparisler.Count();
-
-        for (int i = 1; i <= yeniSiparisSayisi; i++)
+        for (int i = 1; i <= 500; i++) // 500 sipariþ oluþturuluyor
         {
             context.Siparisler.Add(new Siparis
             {
-                MusteriAdi = $"Müþteri {maxSiparisId + i}",
-                Tarih = DateTime.Now.AddDays(-i)
+                MusteriAdi = $"Müþteri {i}",
+                Tarih = DateTime.Now.AddDays(-i) // Sipariþ tarihleri geçmiþte farklý günler
             });
-
-            if (i % 1000 == 0) // Her 1000 sipariþte bir kaydet
-            {
-                await context.SaveChangesAsync();
-                Console.WriteLine($"{i} sipariþ eklendi.");
-            }
         }
         await context.SaveChangesAsync();
-        Console.WriteLine("Sipariþler baþarýyla eklendi!");
     }
 
     // Sipariþ Detaylarý ekle
-    if (context.SiparisDetaylar.Any())
+    if (!context.SiparisDetaylar.Any())
     {
         var random = new Random();
         var urunler = context.Urunler.ToList();
@@ -124,21 +116,9 @@ static async Task SeedDatabaseAsync(WebApplication app)
             }
         }
         await context.SaveChangesAsync();
-        Console.WriteLine("Sipariþ detaylarý baþarýyla eklendi!");
     }
+
+    Console.WriteLine("Tüm veriler baþarýyla eklendi!");
 }
 
-
 ////------------------------------------------\\
-
-
-
-
-
-
-
-
-
-
-
-
