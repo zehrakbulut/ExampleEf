@@ -17,7 +17,7 @@ namespace ExampleEf.Data
 		}
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlServer("Server = ZEHRA; initial catalog = ExampleEfDb; integrated security = true; TrustServerCertificate = true");
+			
 		}
 
 	}

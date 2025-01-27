@@ -17,8 +17,8 @@ namespace ExampleEf.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllUrun()
+        [HttpGet("ProductList")]
+        public async Task<IActionResult> GetProductList()
         {
             var urunler = await _context.Urunler.ToListAsync();
             return Ok(urunler);
@@ -331,6 +331,10 @@ namespace ExampleEf.Controllers
                 .OrderBy(u => u.Adi).ToListAsync();
             return Ok(urunlerinToplamFiyatlariniSirala);
         }
+
+        //soru15
+
+
 
 
 
