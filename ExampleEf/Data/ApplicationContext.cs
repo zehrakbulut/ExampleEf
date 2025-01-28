@@ -15,9 +15,10 @@ namespace ExampleEf.Data
 		public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
 		{
 		}
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			
+			modelBuilder.Entity<Urun>()
+				.HasIndex(x => x.Adi);
 		}
 
 	}
